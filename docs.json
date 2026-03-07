@@ -3,7 +3,7 @@
     "theme": "linden",
     "name": "Nexi API",
     "api": {
-        "spec": "openapi.yaml"
+        "openapi": "openapi.yaml"
     },
     "colors": {
         "primary": "#6366f1",

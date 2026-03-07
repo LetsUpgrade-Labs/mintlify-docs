@@ -2,14 +2,40 @@
     "$schema": "https://mintlify.com/docs.json",
     "theme": "mint",
     "name": "Nexi API",
+    "logo": {
+        "dark": "/logo/dark.svg",
+        "light": "/logo/light.svg"
+    },
+    "favicon": "/favicon.svg",
     "api": {
         "openapi": "openapi.yaml"
     },
     "colors": {
         "primary": "#6366f1",
         "light": "#818cf8",
-        "dark": "#4f46e5"
+        "dark": "#4f46e5",
+        "background": {
+            "dark": "#0f0f11",
+            "light": "#ffffff"
+        }
     },
+    "topbarLinks": [
+        {
+            "name": "Dashboard",
+            "url": "https://nexi.thelisa.ai/dashboard"
+        }
+    ],
+    "topbarCtaButton": {
+        "name": "Get Started",
+        "url": "https://nexi.thelisa.ai"
+    },
+    "anchors": [
+        {
+            "name": "Website",
+            "icon": "globe",
+            "url": "https://nexi.thelisa.ai"
+        }
+    ],
     "navigation": {
         "tabs": [
             {

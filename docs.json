@@ -15,9 +15,9 @@
                     {
                         "group": "Get Started",
                         "pages": [
-                            "docs/introduction",
-                            "docs/guides/authentication",
-                            "docs/guides/quickstart"
+                            "introduction",
+                            "guides/authentication",
+                            "guides/quickstart"
                         ]
                     }
                 ]
@@ -28,7 +28,7 @@
                     {
                         "group": "Overview",
                         "pages": [
-                            "docs/api-reference/overview"
+                            "api-reference/overview"
                         ]
                     },
                     {

@@ -1,0 +1,109 @@
+{
+  "$schema": "https://mintlify.com/schema.json",
+  "name": "Nexi API",
+  "openapi": [
+    "/openapi.yaml"
+  ],
+  "logo": {
+    "dark": "/logo/dark.svg",
+    "light": "/logo/light.svg"
+  },
+  "favicon": "/favicon.svg",
+  "colors": {
+    "primary": "#6366f1",
+    "light": "#818cf8",
+    "dark": "#4f46e5",
+    "background": {
+      "dark": "#0f0f11",
+      "light": "#ffffff"
+    }
+  },
+  "topbarLinks": [
+    {
+      "name": "Dashboard",
+      "url": "https://nexi.thelisa.ai/dashboard"
+    }
+  ],
+  "topbarCtaButton": {
+    "name": "Get Started",
+    "url": "https://nexi.thelisa.ai"
+  },
+  "tabs": [
+    {
+      "name": "API Reference",
+      "url": "api-reference"
+    }
+  ],
+  "anchors": [
+    {
+      "name": "Website",
+      "icon": "globe",
+      "url": "https://nexi.thelisa.ai"
+    }
+  ],
+  "navigation": [
+    {
+      "group": "Get Started",
+      "pages": [
+        "introduction",
+        "guides/authentication",
+        "guides/quickstart"
+      ]
+    },
+    {
+      "group": "API Reference",
+      "pages": [
+        "api-reference/overview"
+      ]
+    },
+    {
+      "group": "Auth",
+      "pages": [
+        "POST /api/auth/login",
+        "POST /api/auth/google",
+        "GET /api/auth/me",
+        "POST /api/auth/logout",
+        "POST /api/auth/set-password"
+      ]
+    },
+    {
+      "group": "Video Generation",
+      "pages": [
+        "POST /api/generate-video",
+        "GET /api/video-status",
+        "POST /api/render-final",
+        "POST /api/regenerate-audio"
+      ]
+    },
+    {
+      "group": "Videos",
+      "pages": [
+        "GET /api/videos",
+        "POST /api/videos",
+        "DELETE /api/videos",
+        "POST /api/videos/retry"
+      ]
+    },
+    {
+      "group": "Assets",
+      "pages": [
+        "POST /api/upload-image",
+        "POST /api/parse-document"
+      ]
+    },
+    {
+      "group": "Admin",
+      "pages": [
+        "GET /api/admin/stats",
+        "GET /api/admin/users",
+        "PATCH /api/admin/users",
+        "GET /api/admin/api-keys",
+        "POST /api/admin/api-keys",
+        "DELETE /api/admin/api-keys"
+      ]
+    }
+  ],
+  "footerSocials": {
+    "website": "https://thelisa.ai"
+  }
+}

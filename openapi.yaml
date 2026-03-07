@@ -1,0 +1,1280 @@
+openapi: 3.1.0
+info:
+  title: Nexi API
+  description: |
+    AI-powered whiteboard video generation platform. Generate explainer videos from text prompts with AI-driven script writing, image generation, voiceover synthesis, and video rendering.
+  version: 1.0.0
+  contact:
+    name: Nexi Support
+    url: https://nexi.thelisa.ai
+
+servers:
+  - url: https://nexi.thelisa.ai
+    description: Production
+
+security:
+  - cookieAuth: []
+
+tags:
+  - name: Auth
+    description: User authentication and session management
+  - name: Video Generation
+    description: Core video generation and rendering pipeline
+  - name: Videos
+    description: Video CRUD operations
+  - name: Assets
+    description: File uploads and document parsing
+  - name: Admin
+    description: Admin-only platform management
+
+paths:
+  /api/auth/login:
+    post:
+      operationId: login
+      summary: Login
+      description: Authenticate with email and password. Sets an HTTP-only JWT cookie on success and creates a user session.
+      tags: [Auth]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: User email address
+                  example: user@example.com
+                password:
+                  type: string
+                  description: User password
+                  example: yourpassword
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  user:
+                    $ref: "#/components/schemas/UserBasic"
+        "400":
+          description: Missing email or password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: Email and password are required
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: Invalid email or password
+        "403":
+          description: Google-only account needs password set first
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  needsPassword:
+                    type: boolean
+                    example: true
+                  error:
+                    type: string
+                    example: This account was created with Google. Please set a password first.
+
+  /api/auth/google:
+    post:
+      operationId: googleLogin
+      summary: Google OAuth Login
+      description: Authenticate using a Google ID token. Creates a new user if one doesn't exist, or links to an existing account. Sets JWT cookie on success.
+      tags: [Auth]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [credential]
+              properties:
+                credential:
+                  type: string
+                  description: Google OAuth ID token
+                  example: eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  isNewUser:
+                    type: boolean
+                    description: Whether this is a newly created account
+                    example: false
+                  hasPassword:
+                    type: boolean
+                    description: Whether the user has set a password
+                    example: true
+                  user:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        example: abc123
+                      email:
+                        type: string
+                        example: user@example.com
+                      name:
+                        type: string
+                        example: John Doe
+                      avatarUrl:
+                        type: string
+                        example: https://lh3.googleusercontent.com/...
+        "400":
+          description: Missing Google credential
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: Google credential is required
+        "401":
+          description: Invalid Google token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: Invalid Google token payload
+
+  /api/auth/me:
+    get:
+      operationId: getCurrentUser
+      summary: Get Current User
+      description: Returns the currently authenticated user's profile from the JWT cookie.
+      tags: [Auth]
+      responses:
+        "200":
+          description: Returns user profile
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: "#/components/schemas/UserProfile"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: Not authenticated
+        "404":
+          description: User not found in database
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: User not found
+
+  /api/auth/logout:
+    post:
+      operationId: logout
+      summary: Logout
+      description: Logs out the current user by revoking the session and clearing the auth cookie.
+      tags: [Auth]
+      responses:
+        "200":
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Logged out successfully
+
+  /api/auth/set-password:
+    post:
+      operationId: setPassword
+      summary: Set Password
+      description: Sets a password for Google-only users who don't have one yet. Revokes all other active sessions after setting.
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [password]
+              properties:
+                password:
+                  type: string
+                  minLength: 6
+                  description: New password (minimum 6 characters)
+                  example: newpassword123
+      responses:
+        "200":
+          description: Password set successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+        "400":
+          description: Missing or invalid password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: Password must be at least 6 characters
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: Not authenticated
+
+  /api/generate-video:
+    post:
+      operationId: generateVideo
+      summary: Generate Video
+      description: |
+        Starts AI video generation via the background pipeline. Supports both JWT cookie and API key authentication.
+
+        The pipeline includes script generation (Claude 3.5 Sonnet), high-end whiteboard image creation, voiceover synthesis using Sarvam Bulbul 3.0 for natural Indian accents, and automated assembly into a Remotion project.
+      tags: [Video Generation]
+      security:
+        - cookieAuth: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [prompt]
+              properties:
+                prompt:
+                  type: string
+                  description: Text prompt describing the video to generate
+                  example: Explain how solar panels convert sunlight into electricity
+                skipEditing:
+                  type: boolean
+                  description: If true, skips the editing step and renders directly
+                  default: false
+                  example: false
+                logoUrl:
+                  type: string
+                  description: URL to a logo image to overlay on the video
+                  example: https://example.com/logo.png
+                assetUrls:
+                  type: array
+                  items:
+                    type: string
+                  description: Array of asset image URLs to include in the video
+                  example:
+                    - https://example.com/asset1.jpg
+                userImageUrl:
+                  type: string
+                  description: Primary user-provided image URL
+                  example: https://example.com/main-image.jpg
+                userImageUrls:
+                  type: array
+                  items:
+                    type: string
+                  description: Array of user-provided image URLs
+                  example:
+                    - https://example.com/image1.jpg
+                    - https://example.com/image2.jpg
+      responses:
+        "202":
+          description: Video generation triggered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RunResponse"
+        "400":
+          description: Missing or invalid prompt
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: "Missing or invalid 'prompt' field"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: "Authentication required. Provide a valid session cookie or API key."
+
+  /api/video-status:
+    get:
+      operationId: getVideoStatus
+      summary: Get Video Status
+      description: Returns the current status of a video generation or rendering run. Poll this endpoint to track progress.
+      tags: [Video Generation]
+      security: []
+      parameters:
+        - name: runId
+          in: query
+          required: true
+          schema:
+            type: string
+          description: The run ID returned from generate-video or render-final
+          example: run_abc123
+      responses:
+        "200":
+          description: Returns current status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [processing, draft_ready, completed, failed]
+                    description: Current status of the run
+                    example: completed
+                  videoId:
+                    type: string
+                    description: Video record ID (present when completed)
+                    example: video123
+                  videoUrl:
+                    type: string
+                    description: Direct URL to the generated video (present when completed)
+                    example: https://s3.amazonaws.com/bucket/video.mp4
+                  progress:
+                    type: number
+                    description: Progress percentage (0-100)
+                    example: 100
+                  isDraft:
+                    type: boolean
+                    description: Whether the video is in draft/editing state
+                    example: false
+                  isDegraded:
+                    type: boolean
+                    description: Whether the video quality was degraded due to errors
+                    example: false
+        "400":
+          description: Missing runId parameter
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: "Missing 'runId' query parameter"
+        "404":
+          description: Run not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: Run not found
+
+  /api/render-final:
+    post:
+      operationId: renderFinal
+      summary: Render Final Video
+      description: Renders the final video from an edited blueprint. Called after the user has made edits to the video in the editor.
+      tags: [Video Generation]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [blueprint, videoId]
+              properties:
+                blueprint:
+                  type: object
+                  description: The complete enriched blueprint object with scene data
+                videoId:
+                  type: string
+                  description: The video record ID to render
+                  example: video123
+      responses:
+        "202":
+          description: Render triggered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RunResponse"
+        "400":
+          description: Missing blueprint or videoId
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: "Missing 'blueprint' or 'videoId' field"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: Unauthorized
+        "403":
+          description: Video not owned by user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: Unauthorized access to video
+
+  /api/regenerate-audio:
+    post:
+      operationId: regenerateAudio
+      summary: Regenerate Scene Audio
+      description: Regenerates TTS (text-to-speech) audio for a specific scene. Uploads the new audio to S3 and returns the URL with word-level alignment data for captions.
+      tags: [Video Generation]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [text, sceneIndex, videoId]
+              properties:
+                text:
+                  type: string
+                  description: The narration text to synthesize
+                  example: This is the updated narration text for the scene.
+                sceneIndex:
+                  type: integer
+                  description: Zero-based index of the scene
+                  example: 0
+                videoId:
+                  type: string
+                  description: The video record ID
+                  example: video123
+      responses:
+        "200":
+          description: Audio regenerated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  audioUrl:
+                    type: string
+                    description: S3 URL of the new audio file
+                    example: https://s3.amazonaws.com/bucket/audio/scene-0.mp3
+                  duration:
+                    type: number
+                    description: Audio duration in seconds
+                    example: 5.2
+                  alignment:
+                    type: object
+                    properties:
+                      words:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            word:
+                              type: string
+                              example: This
+                            start:
+                              type: number
+                              description: Start time in seconds
+                              example: 0.0
+                            end:
+                              type: number
+                              description: End time in seconds
+                              example: 0.15
+        "400":
+          description: Missing required fields
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: Missing required fields
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: Not authenticated
+
+  /api/videos:
+    get:
+      operationId: listVideos
+      summary: List Videos
+      description: Returns all videos belonging to the authenticated user, sorted by creation date (newest first).
+      tags: [Videos]
+      responses:
+        "200":
+          description: Returns array of video objects
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  videos:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Video"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: Not authenticated
+        "403":
+          description: Domain not allowed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: Domain not allowed
+
+    post:
+      operationId: createVideo
+      summary: Create Video Record
+      description: Creates a new video record in the database.
+      tags: [Videos]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [prompt]
+              properties:
+                prompt:
+                  type: string
+                  description: The text prompt for video generation
+                  example: Create a video about AI technology
+                runId:
+                  type: string
+                  description: Trigger.dev run ID if already triggered
+                  example: run_abc123
+      responses:
+        "201":
+          description: Video record created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  video:
+                    $ref: "#/components/schemas/Video"
+        "400":
+          description: Missing prompt
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: Prompt is required
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: Not authenticated
+
+    delete:
+      operationId: deleteVideo
+      summary: Delete Video
+      description: Deletes a video and its associated assets (S3 files) owned by the authenticated user.
+      tags: [Videos]
+      parameters:
+        - name: id
+          in: query
+          required: true
+          schema:
+            type: string
+          description: The video ID to delete
+          example: video123
+      responses:
+        "200":
+          description: Video deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  deletedAssets:
+                    type: array
+                    items:
+                      type: string
+                    example:
+                      - videos/video123.mp4
+                      - thumbnails/video123.jpg
+        "400":
+          description: Missing video ID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: Video ID is required
+        "404":
+          description: Video not found or not owned by user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: Video not found
+
+  /api/videos/retry:
+    post:
+      operationId: retryVideo
+      summary: Retry Video Generation
+      description: Retries generation for a failed video. Triggers a new background pipeline run.
+      tags: [Videos]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [videoId]
+              properties:
+                videoId:
+                  type: string
+                  description: ID of the failed video to retry
+                  example: video123
+      responses:
+        "200":
+          description: Retry triggered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  runId:
+                    type: string
+                    example: run_xyz789
+        "400":
+          description: Missing video ID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: Video ID is required
+        "403":
+          description: Video not owned by user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: Unauthorized
+        "404":
+          description: Video not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: Video not found
+
+  /api/upload-image:
+    post:
+      operationId: uploadImage
+      summary: Upload Image
+      description: Uploads an image to S3 for use as a video asset. Accepts JPEG, PNG, WebP, and GIF formats up to 50MB.
+      tags: [Assets]
+      security: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [image]
+              properties:
+                image:
+                  type: string
+                  format: binary
+                  description: Image file (JPEG, PNG, WebP, GIF, max 50MB)
+      responses:
+        "200":
+          description: Image uploaded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  imageUrl:
+                    type: string
+                    description: S3 URL of the uploaded image
+                    example: https://s3.amazonaws.com/bucket/uploads/image-abc123.png
+        "400":
+          description: No file, invalid type, or exceeds size limit
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: "Invalid file type. Only JPEG, PNG, WebP, and GIF are allowed."
+
+  /api/parse-document:
+    post:
+      operationId: parseDocument
+      summary: Parse Document
+      description: Extracts text content from uploaded documents for use as video generation prompts. Supports PDF, DOCX, TXT, MD, and CSV formats.
+      tags: [Assets]
+      security: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Document file (PDF, DOCX, TXT, MD, CSV)
+      responses:
+        "200":
+          description: Document parsed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  fileName:
+                    type: string
+                    example: presentation.pdf
+                  fileType:
+                    type: string
+                    example: application/pdf
+                  text:
+                    type: string
+                    description: Extracted text content
+                    example: Extracted text content from the document...
+                  charCount:
+                    type: integer
+                    example: 5432
+                  truncated:
+                    type: boolean
+                    description: Whether the text was truncated due to length
+                    example: false
+        "400":
+          description: No file or unsupported file type
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Unsupported file type
+                  supportedTypes:
+                    type: array
+                    items:
+                      type: string
+                    example: [pdf, docx, txt, md, csv]
+
+  /api/admin/stats:
+    get:
+      operationId: getAdminStats
+      summary: Get Platform Stats
+      description: Returns aggregate statistics for the admin dashboard including user and video counts.
+      tags: [Admin]
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: Returns platform statistics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  totalUsers:
+                    type: integer
+                    example: 150
+                  totalVideos:
+                    type: integer
+                    example: 523
+                  completedVideos:
+                    type: integer
+                    example: 480
+                  processingVideos:
+                    type: integer
+                    example: 12
+                  failedVideos:
+                    type: integer
+                    example: 31
+
+  /api/admin/users:
+    get:
+      operationId: listUsers
+      summary: List Users
+      description: Returns a paginated list of all users with search and sorting capabilities.
+      tags: [Admin]
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+          description: Page number
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+          description: Items per page
+        - name: search
+          in: query
+          schema:
+            type: string
+          description: Search by name or email
+        - name: sortBy
+          in: query
+          schema:
+            type: string
+            default: createdAt
+          description: Field to sort by
+        - name: sortOrder
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+          description: Sort direction
+      responses:
+        "200":
+          description: Returns users with pagination
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        _id:
+                          type: string
+                          example: user123
+                        email:
+                          type: string
+                          example: user@example.com
+                        name:
+                          type: string
+                          example: John Doe
+                        role:
+                          type: string
+                          enum: [user, admin]
+                          example: user
+                        avatarUrl:
+                          type: string
+                          example: https://lh3.googleusercontent.com/...
+                        kieKeyAlias:
+                          type: string
+                          nullable: true
+                          example: null
+                        createdAt:
+                          type: string
+                          format: date-time
+                          example: "2025-01-01T00:00:00Z"
+                  pagination:
+                    $ref: "#/components/schemas/Pagination"
+
+    patch:
+      operationId: updateUser
+      summary: Update User
+      description: Updates a user's role or KIE key alias.
+      tags: [Admin]
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId]
+              properties:
+                userId:
+                  type: string
+                  description: The user ID to update
+                  example: user123
+                role:
+                  type: string
+                  enum: [user, admin]
+                  description: New role for the user
+                  example: admin
+                kieKeyAlias:
+                  type: string
+                  nullable: true
+                  description: KIE key alias, or null to remove
+                  example: key-alias-1
+      responses:
+        "200":
+          description: User updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User updated successfully
+                  user:
+                    type: object
+                    properties:
+                      _id:
+                        type: string
+                      email:
+                        type: string
+                      name:
+                        type: string
+                      role:
+                        type: string
+                      kieKeyAlias:
+                        type: string
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: User not found
+
+  /api/admin/api-keys:
+    get:
+      operationId: listApiKeys
+      summary: List API Keys
+      description: Lists all API keys for a specific user.
+      tags: [Admin]
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: userId
+          in: query
+          required: true
+          schema:
+            type: string
+          description: User ID to list API keys for
+          example: user123
+      responses:
+        "200":
+          description: Returns array of API keys
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  apiKeys:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ApiKey"
+
+    post:
+      operationId: createApiKey
+      summary: Create API Key
+      description: Creates a new API key for a user. The full key is only returned once — store it securely.
+      tags: [Admin]
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId, name]
+              properties:
+                userId:
+                  type: string
+                  description: User to create the key for
+                  example: user123
+                name:
+                  type: string
+                  description: Display name for the API key
+                  example: Production Key
+      responses:
+        "201":
+          description: API key created (full key shown only once)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  apiKey:
+                    $ref: "#/components/schemas/ApiKey"
+                  plainKey:
+                    type: string
+                    description: The full API key (only shown once, store securely)
+                    example: sk-xyz123456789abcdef
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: User not found
+
+    delete:
+      operationId: revokeApiKey
+      summary: Revoke API Key
+      description: Revokes (deactivates) an existing API key.
+      tags: [Admin]
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [keyId]
+              properties:
+                keyId:
+                  type: string
+                  description: ID of the API key to revoke
+                  example: key123
+      responses:
+        "200":
+          description: API key revoked
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+        "404":
+          description: Key not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: API key not found
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: token
+      description: JWT session cookie (set automatically after login)
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: "API key authentication: `Authorization: Bearer sk-xxx`"
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Human-readable error message
+
+    UserBasic:
+      type: object
+      properties:
+        id:
+          type: string
+          example: abc123
+        email:
+          type: string
+          example: user@example.com
+        name:
+          type: string
+          example: John Doe
+
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: string
+          example: abc123
+        email:
+          type: string
+          example: user@example.com
+        name:
+          type: string
+          example: John Doe
+        role:
+          type: string
+          enum: [user, admin]
+          example: user
+        avatarUrl:
+          type: string
+          example: https://lh3.googleusercontent.com/...
+        hasPassword:
+          type: boolean
+          example: true
+
+    Video:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: video123
+        userId:
+          type: string
+          example: user456
+        prompt:
+          type: string
+          example: Create a video about AI technology
+        videoUrl:
+          type: string
+          nullable: true
+          example: https://s3.amazonaws.com/bucket/video.mp4
+        thumbnailUrl:
+          type: string
+          nullable: true
+          example: https://s3.amazonaws.com/bucket/thumb.jpg
+        duration:
+          type: number
+          nullable: true
+          example: 45.5
+        status:
+          type: string
+          enum: [processing, draft_ready, completed, failed]
+          example: completed
+        blueprint:
+          type: object
+          nullable: true
+        runId:
+          type: string
+          nullable: true
+          example: run_abc123
+        error:
+          type: string
+          nullable: true
+        progress:
+          type: number
+          example: 100
+        createdAt:
+          type: string
+          format: date-time
+          example: "2025-01-15T10:30:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2025-01-15T10:35:00Z"
+
+    RunResponse:
+      type: object
+      properties:
+        runId:
+          type: string
+          description: Background pipeline run ID (use with /api/video-status)
+          example: run_abc123
+        videoId:
+          type: string
+          description: Video record ID
+          example: video456
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 1
+        limit:
+          type: integer
+          example: 20
+        total:
+          type: integer
+          example: 150
+        totalPages:
+          type: integer
+          example: 8
+
+    ApiKey:
+      type: object
+      properties:
+        id:
+          type: string
+          example: key123
+        keyPrefix:
+          type: string
+          example: "sk-abc..."
+        name:
+          type: string
+          example: Production Key
+        isActive:
+          type: boolean
+          example: true
+        lastUsedAt:
+          type: string
+          format: date-time
+          nullable: true
+          example: "2025-01-15T10:30:00Z"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2025-01-01T00:00:00Z"
+        expiresAt:
+          type: string
+          format: date-time
+          example: "2026-01-01T00:00:00Z"

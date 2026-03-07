@@ -1,0 +1,57 @@
+---
+title: Introduction
+description: "Welcome to the Nexi API — AI-powered whiteboard video generation platform"
+---
+
+## What is Nexi?
+
+Nexi is an AI-powered platform that generates luxury whiteboard-style explainer videos from text prompts. Simply describe what you want, and Nexi handles script generation, image creation with professional aesthetics, voiceover synthesis using Sarvam TTS (for natural Indian accents), and final video rendering.
+
+## How it works
+
+<Steps>
+  <Step title="Authenticate">
+    Log in with email/password or Google OAuth to get a session cookie, or use an API key for programmatic access.
+  </Step>
+  <Step title="Submit a prompt">
+    Send a text prompt to the `/api/generate-video` endpoint describing the video you want to create.
+  </Step>
+  <Step title="Monitor progress">
+    Poll the `/api/video-status` endpoint with the returned `runId` to track generation progress in real-time.
+  </Step>
+  <Step title="Edit & render">
+    Once the draft is ready (status `draft_ready`), edit scenes in the editor and trigger final rendering via `/api/render-final`.
+  </Step>
+</Steps>
+
+## Authentication
+
+Nexi supports two authentication methods:
+
+<CardGroup cols={2}>
+  <Card title="Session Cookie" icon="cookie">
+    Log in via `/api/auth/login` or `/api/auth/google`. A JWT cookie is set automatically and sent with subsequent requests.
+  </Card>
+  <Card title="API Key" icon="key">
+    Use an API key in the `Authorization: Bearer sk-xxx` header. API keys are created by admins via `/api/admin/api-keys`.
+  </Card>
+</CardGroup>
+
+## Base URL
+
+All API endpoints are relative to:
+
+```
+https://nexi.thelisa.ai
+```
+
+## Need help?
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/docs/guides/quickstart">
+    Generate your first video in under 5 minutes.
+  </Card>
+  <Card title="API Reference" icon="code" href="/docs/api-reference/overview">
+    Explore all available endpoints.
+  </Card>
+</CardGroup>

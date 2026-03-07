@@ -1,0 +1,95 @@
+---
+title: API Overview
+description: "Complete reference for all Nexi API endpoints"
+---
+
+## Base URL
+
+```
+https://nexi.thelisa.ai
+```
+
+## Authentication
+
+Most endpoints require authentication. See the [Authentication guide](/docs/guides/authentication) for details.
+
+| Method | How | Used by |
+|--------|-----|---------|
+| JWT Cookie | Auto-set after login | Most endpoints |
+| API Key | `Authorization: Bearer sk-xxx` header | `/api/generate-video` |
+| Admin | JWT cookie with admin role | `/api/admin/*` endpoints |
+
+## Endpoints at a glance
+
+### Auth
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/auth/login` | Email & password login |
+| `POST` | `/api/auth/google` | Google OAuth login |
+| `GET` | `/api/auth/me` | Get current user |
+| `POST` | `/api/auth/logout` | Logout |
+| `POST` | `/api/auth/set-password` | Set password for Google users |
+
+### Video Generation
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/generate-video` | Start AI video generation |
+| `GET` | `/api/video-status` | Check generation status |
+| `POST` | `/api/render-final` | Render edited video |
+| `POST` | `/api/regenerate-audio` | Regenerate scene audio |
+
+### Videos
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/videos` | List user's videos |
+| `POST` | `/api/videos` | Create video record |
+| `DELETE` | `/api/videos` | Delete a video |
+| `POST` | `/api/videos/retry` | Retry failed generation |
+
+### Assets
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/upload-image` | Upload image to S3 |
+| `POST` | `/api/parse-document` | Extract text from documents |
+
+### Admin
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/admin/stats` | Platform statistics |
+| `GET` | `/api/admin/users` | List users (paginated) |
+| `PATCH` | `/api/admin/users` | Update user role |
+| `GET` | `/api/admin/api-keys` | List user's API keys |
+| `POST` | `/api/admin/api-keys` | Create API key |
+| `DELETE` | `/api/admin/api-keys` | Revoke API key |
+
+## Rate Limits
+
+API key requests are subject to rate limiting. Contact your admin for details.
+
+## Errors
+
+All error responses follow this format:
+
+```json
+{
+  "error": "Human-readable error message"
+}
+```
+
+Common HTTP status codes:
+
+| Code | Meaning |
+|------|---------|
+| `200` | Success |
+| `201` | Created |
+| `202` | Accepted (async task started) |
+| `400` | Bad request (missing/invalid params) |
+| `401` | Not authenticated |
+| `403` | Forbidden (wrong role or owner) |
+| `404` | Resource not found |
+| `500` | Server error |

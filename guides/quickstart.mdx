@@ -1,0 +1,117 @@
+---
+title: Quickstart
+description: "Generate your first AI video in under 5 minutes"
+---
+
+## Prerequisites
+
+- A Nexi account (sign up at [nexi.thelisa.ai](https://nexi.thelisa.ai))
+- An API key (request from your admin) or active session
+
+## Step 1: Authenticate
+
+<CodeGroup>
+```bash API Key
+export NEXI_API_KEY="sk-your-api-key"
+```
+
+```bash Session Cookie
+curl -X POST https://nexi.thelisa.ai/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "you@example.com", "password": "yourpassword"}' \
+  -c cookies.txt
+```
+</CodeGroup>
+
+## Step 2: Generate a video
+
+<CodeGroup>
+```bash API Key
+curl -X POST https://nexi.thelisa.ai/api/generate-video \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $NEXI_API_KEY" \
+  -d '{
+    "prompt": "Explain how solar panels convert sunlight into electricity",
+    "skipEditing": true
+  }'
+```
+
+```bash Session Cookie
+curl -X POST https://nexi.thelisa.ai/api/generate-video \
+  -H "Content-Type: application/json" \
+  -b cookies.txt \
+  -d '{
+    "prompt": "Explain how solar panels convert sunlight into electricity",
+    "skipEditing": true
+  }'
+```
+</CodeGroup>
+
+**Response:**
+
+```json
+{
+  "runId": "run_abc123",
+  "videoId": "video456"
+}
+```
+
+## Step 3: Poll for status
+
+```bash
+curl "https://nexi.thelisa.ai/api/video-status?runId=run_abc123"
+```
+
+Poll every few seconds until `status` is `completed` (or `draft_ready` if editing is required):
+
+```json
+{
+  "status": "completed",
+  "videoId": "video456",
+  "videoUrl": "https://s3.amazonaws.com/bucket/video.mp4",
+  "progress": 100
+}
+```
+
+### Status values
+
+| Status | Meaning |
+|--------|---------|
+| `processing` | Actively generating assets |
+| `draft_ready` | Manual editing required before rendering |
+| `completed` | Video is ready for download |
+| `failed` | Generation failed |
+
+## Step 4: Download your video
+
+The `videoUrl` in the completed response is a direct link to your generated video. You can download it or embed it directly.
+
+## Optional: Upload custom assets
+
+You can include your own images in the video:
+
+```bash
+# Upload an image
+curl -X POST https://nexi.thelisa.ai/api/upload-image \
+  -F "image=@./my-diagram.png"
+
+# Use it in generation
+curl -X POST https://nexi.thelisa.ai/api/generate-video \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $NEXI_API_KEY" \
+  -d '{
+    "prompt": "Explain this diagram",
+    "userImageUrls": ["https://s3.amazonaws.com/bucket/my-diagram.png"]
+  }'
+```
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="API Reference" icon="code" href="/docs/api-reference/overview">
+    Explore all endpoints in detail.
+  </Card>
+  <Card title="Authentication" icon="lock" href="/docs/guides/authentication">
+    Learn about auth methods.
+  </Card>
+</CardGroup>

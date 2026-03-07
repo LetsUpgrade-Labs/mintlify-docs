@@ -1,0 +1,76 @@
+---
+title: Authentication
+description: "How to authenticate with the Nexi API"
+---
+
+## Overview
+
+The Nexi API supports two authentication methods depending on your use case.
+
+## Method 1: Session Cookie (Browser / Interactive)
+
+For browser-based or interactive use, authenticate via the login endpoints. A JWT cookie is set automatically.
+
+### Email & Password
+
+```bash
+curl -X POST https://nexi.thelisa.ai/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "you@example.com", "password": "yourpassword"}' \
+  -c cookies.txt
+```
+
+### Google OAuth
+
+```bash
+curl -X POST https://nexi.thelisa.ai/api/auth/google \
+  -H "Content-Type: application/json" \
+  -d '{"credential": "google-id-token"}' \
+  -c cookies.txt
+```
+
+After login, include the cookie in subsequent requests:
+
+```bash
+curl https://nexi.thelisa.ai/api/auth/me -b cookies.txt
+```
+
+## Method 2: API Key (Programmatic)
+
+For server-to-server or programmatic access, use an API key. API keys are created by admins.
+
+```bash
+curl -X POST https://nexi.thelisa.ai/api/generate-video \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer sk-your-api-key-here" \
+  -d '{"prompt": "Explain quantum computing in simple terms"}'
+```
+
+<Note>
+  API key authentication is currently supported only on the `/api/generate-video` endpoint.
+</Note>
+
+## Checking your session
+
+To verify your authentication status:
+
+```bash
+curl https://nexi.thelisa.ai/api/auth/me -b cookies.txt
+```
+
+Returns your user profile if authenticated, or `401` if not.
+
+## Setting a password (Google users)
+
+If you signed up with Google and want to also use email/password login:
+
+```bash
+curl -X POST https://nexi.thelisa.ai/api/auth/set-password \
+  -H "Content-Type: application/json" \
+  -b cookies.txt \
+  -d '{"password": "newpassword123"}'
+```
+
+<Warning>
+  Password must be at least 6 characters. Setting a password revokes all other active sessions.
+</Warning>

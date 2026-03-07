@@ -2,6 +2,7 @@
     "$schema": "https://mintlify.com/docs.json",
     "theme": "linden",
     "name": "Nexi API",
+    "api": "openapi.yaml",
     "colors": {
         "primary": "#6366f1",
         "light": "#818cf8",
@@ -34,54 +35,116 @@
                     {
                         "group": "Auth",
                         "pages": [
-                            "POST /api/auth/login",
-                            "POST /api/auth/google",
-                            "GET /api/auth/me",
-                            "POST /api/auth/logout",
-                            "POST /api/auth/set-password"
+                            {
+                                "page": "api-reference/auth-login",
+                                "openapi": "POST /api/auth/login"
+                            },
+                            {
+                                "page": "api-reference/auth-google",
+                                "openapi": "POST /api/auth/google"
+                            },
+                            {
+                                "page": "api-reference/auth-me",
+                                "openapi": "GET /api/auth/me"
+                            },
+                            {
+                                "page": "api-reference/auth-logout",
+                                "openapi": "POST /api/auth/logout"
+                            },
+                            {
+                                "page": "api-reference/auth-set-password",
+                                "openapi": "POST /api/auth/set-password"
+                            }
                         ]
                     },
                     {
                         "group": "Video Generation",
                         "pages": [
-                            "POST /api/generate-video",
-                            "GET /api/video-status",
-                            "POST /api/render-final",
-                            "POST /api/regenerate-audio"
+                            {
+                                "page": "api-reference/generate-video",
+                                "openapi": "POST /api/generate-video"
+                            },
+                            {
+                                "page": "api-reference/video-status",
+                                "openapi": "GET /api/video-status"
+                            },
+                            {
+                                "page": "api-reference/render-final",
+                                "openapi": "POST /api/render-final"
+                            },
+                            {
+                                "page": "api-reference/regenerate-audio",
+                                "openapi": "POST /api/regenerate-audio"
+                            }
                         ]
                     },
                     {
                         "group": "Videos",
                         "pages": [
-                            "GET /api/videos",
-                            "POST /api/videos",
-                            "DELETE /api/videos",
-                            "POST /api/videos/retry"
+                            {
+                                "page": "api-reference/videos-list",
+                                "openapi": "GET /api/videos"
+                            },
+                            {
+                                "page": "api-reference/videos-create",
+                                "openapi": "POST /api/videos"
+                            },
+                            {
+                                "page": "api-reference/videos-delete",
+                                "openapi": "DELETE /api/videos"
+                            },
+                            {
+                                "page": "api-reference/videos-retry",
+                                "openapi": "POST /api/videos/retry"
+                            }
                         ]
                     },
                     {
                         "group": "Assets",
                         "pages": [
-                            "POST /api/upload-image",
-                            "POST /api/parse-document"
+                            {
+                                "page": "api-reference/upload-image",
+                                "openapi": "POST /api/upload-image"
+                            },
+                            {
+                                "page": "api-reference/parse-document",
+                                "openapi": "POST /api/parse-document"
+                            }
                         ]
                     },
                     {
                         "group": "Admin",
                         "pages": [
-                            "GET /api/admin/stats",
-                            "GET /api/admin/users",
-                            "PATCH /api/admin/users",
-                            "GET /api/admin/api-keys",
-                            "POST /api/admin/api-keys",
-                            "DELETE /api/admin/api-keys"
+                            {
+                                "page": "api-reference/admin-stats",
+                                "openapi": "GET /api/admin/stats"
+                            },
+                            {
+                                "page": "api-reference/admin-users-list",
+                                "openapi": "GET /api/admin/users"
+                            },
+                            {
+                                "page": "api-reference/admin-users-update",
+                                "openapi": "PATCH /api/admin/users"
+                            },
+                            {
+                                "page": "api-reference/admin-api-keys-list",
+                                "openapi": "GET /api/admin/api-keys"
+                            },
+                            {
+                                "page": "api-reference/admin-api-keys-create",
+                                "openapi": "POST /api/admin/api-keys"
+                            },
+                            {
+                                "page": "api-reference/admin-api-keys-delete",
+                                "openapi": "DELETE /api/admin/api-keys"
+                            }
                         ]
                     }
                 ]
             }
         ]
     },
-    "openapi": "openapi.yaml",
     "footer": {
         "socials": {
             "website": "https://thelisa.ai"

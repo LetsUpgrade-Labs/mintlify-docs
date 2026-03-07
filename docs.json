@@ -1,5 +1,6 @@
 {
     "$schema": "https://mintlify.com/docs.json",
+    "theme": "linden",
     "name": "Nexi API",
     "colors": {
         "primary": "#6366f1",
@@ -14,9 +15,9 @@
                     {
                         "group": "Get Started",
                         "pages": [
-                            "introduction",
-                            "guides/authentication",
-                            "guides/quickstart"
+                            "docs/introduction",
+                            "docs/guides/authentication",
+                            "docs/guides/quickstart"
                         ]
                     }
                 ]
@@ -27,7 +28,7 @@
                     {
                         "group": "Overview",
                         "pages": [
-                            "api-reference/overview"
+                            "docs/api-reference/overview"
                         ]
                     },
                     {

@@ -32,7 +32,12 @@ curl -X POST https://nexi.thelisa.ai/api/generate-video \
   -H "Authorization: Bearer $NEXI_API_KEY" \
   -d '{
     "prompt": "Explain how solar panels convert sunlight into electricity",
-    "skipEditing": true
+    "skipEditing": true,
+    "llmProvider": "anthropic:claude-sonnet-4-20250514",
+    "ttsProvider": "sarvam:bulbul-v3",
+    "imageProvider": "kie:flux-2",
+    "imageStyle": "animated-cartoon",
+    "voiceId": "meera"
   }'
 ```
 
@@ -42,7 +47,8 @@ curl -X POST https://nexi.thelisa.ai/api/generate-video \
   -b cookies.txt \
   -d '{
     "prompt": "Explain how solar panels convert sunlight into electricity",
-    "skipEditing": true
+    "skipEditing": true,
+    "imageStyle": "photorealistic"
   }'
 ```
 </CodeGroup>
@@ -55,6 +61,10 @@ curl -X POST https://nexi.thelisa.ai/api/generate-video \
   "videoId": "video456"
 }
 ```
+
+<Note>
+  All provider fields (`llmProvider`, `ttsProvider`, `imageProvider`, `imageStyle`, `voiceId`) are optional. Sensible defaults are used when omitted.
+</Note>
 
 ## Step 3: Poll for status
 

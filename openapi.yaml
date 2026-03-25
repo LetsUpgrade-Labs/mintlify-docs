@@ -273,7 +273,9 @@ paths:
       description: |
         Starts AI video generation via the background pipeline. Supports both JWT cookie and API key authentication.
 
-        The pipeline includes script generation (Claude 3.5 Sonnet), high-end whiteboard image creation, voiceover synthesis using Sarvam Bulbul 3.0 for natural Indian accents, and automated assembly into a Remotion project.
+        The pipeline includes script generation, image creation, voiceover synthesis, and automated assembly into a Remotion project. Each stage uses a configurable AI provider — pass `llmProvider`, `imageProvider`, `ttsProvider`, and `voiceId` to override defaults.
+
+        Rate limit headers (`X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`) are included in all responses.
       tags: [Video Generation]
       security:
         - cookieAuth: []
@@ -318,9 +320,63 @@ paths:
                   example:
                     - https://example.com/image1.jpg
                     - https://example.com/image2.jpg
+                userImageDescriptions:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      url:
+                        type: string
+                      description:
+                        type: string
+                      isLogo:
+                        type: boolean
+                  description: Descriptions for each user-provided image (matched by index with userImageUrls). Helps the AI use images more appropriately.
+                  example:
+                    - url: https://example.com/logo.png
+                      description: Company logo
+                      isLogo: true
+                llmProvider:
+                  type: string
+                  description: "LLM provider and model for script generation (format: provider:model)"
+                  example: "anthropic:claude-sonnet-4-20250514"
+                ttsProvider:
+                  type: string
+                  description: "TTS provider and model for voiceover synthesis (format: provider:model)"
+                  example: "sarvam:bulbul-v3"
+                imageProvider:
+                  type: string
+                  description: "Image generation provider and model (format: provider:model)"
+                  example: "kie:flux-2"
+                imageStyle:
+                  type: string
+                  description: Visual style for generated scene images
+                  enum: [doodle, animated-cartoon, photorealistic]
+                  default: animated-cartoon
+                  example: animated-cartoon
+                voiceId:
+                  type: string
+                  description: Provider-specific voice identifier for TTS
+                  example: "meera"
       responses:
         "202":
           description: Video generation triggered
+          headers:
+            X-RateLimit-Limit:
+              schema:
+                type: integer
+              description: Maximum requests per minute for this API key
+              example: 10
+            X-RateLimit-Remaining:
+              schema:
+                type: integer
+              description: Remaining requests in the current window
+              example: 9
+            X-RateLimit-Reset:
+              schema:
+                type: integer
+              description: Unix timestamp when the rate limit window resets
+              example: 1672531260
           content:
             application/json:
               schema:
@@ -341,6 +397,27 @@ paths:
                 $ref: "#/components/schemas/Error"
               example:
                 error: "Authentication required. Provide a valid session cookie or API key."
+        "429":
+          description: Rate limit exceeded (10 requests per minute per API key)
+          headers:
+            X-RateLimit-Limit:
+              schema:
+                type: integer
+              example: 10
+            X-RateLimit-Remaining:
+              schema:
+                type: integer
+              example: 0
+            X-RateLimit-Reset:
+              schema:
+                type: integer
+              example: 1672531260
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: "Rate limit exceeded. Try again later."
 
   /api/video-status:
     get:

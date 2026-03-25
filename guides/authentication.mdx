@@ -37,7 +37,7 @@ curl https://nexi.thelisa.ai/api/auth/me -b cookies.txt
 
 ## Method 2: API Key (Programmatic)
 
-For server-to-server or programmatic access, use an API key. API keys are created by admins.
+For server-to-server or programmatic access, use an API key. API keys are created by admins and sent as a Bearer token in the `Authorization` header.
 
 ```bash
 curl -X POST https://nexi.thelisa.ai/api/generate-video \
@@ -46,8 +46,15 @@ curl -X POST https://nexi.thelisa.ai/api/generate-video \
   -d '{"prompt": "Explain quantum computing in simple terms"}'
 ```
 
+API key authentication is supported on **all** API routes. Any endpoint that accepts a session cookie also accepts a `Bearer sk-xxx` API key.
+
+```bash
+curl https://nexi.thelisa.ai/api/videos \
+  -H "Authorization: Bearer sk-your-api-key-here"
+```
+
 <Note>
-  API key authentication is currently supported only on the `/api/generate-video` endpoint.
+  Rate limiting is enforced at **10 requests per minute** per API key. Rate limit headers (`X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`) are included in every response.
 </Note>
 
 ## Checking your session

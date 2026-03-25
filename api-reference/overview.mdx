@@ -15,9 +15,9 @@ Most endpoints require authentication. See the [Authentication guide](/guides/au
 
 | Method | How | Used by |
 |--------|-----|---------|
-| JWT Cookie | Auto-set after login | Most endpoints |
-| API Key | `Authorization: Bearer sk-xxx` header | `/api/generate-video` |
-| Admin | JWT cookie with admin role | `/api/admin/*` endpoints |
+| JWT Cookie | Auto-set after login | All endpoints |
+| API Key | `Authorization: Bearer sk-xxx` header | All endpoints |
+| Admin | JWT cookie or API key with admin role | `/api/admin/*` endpoints |
 
 ## Endpoints at a glance
 
@@ -67,9 +67,53 @@ Most endpoints require authentication. See the [Authentication guide](/guides/au
 | `POST` | `/api/admin/api-keys` | Create API key |
 | `DELETE` | `/api/admin/api-keys` | Revoke API key |
 
+## Provider Selection
+
+The `/api/generate-video` endpoint accepts optional provider parameters to customize which AI models are used for each stage of the pipeline:
+
+| Parameter | Type | Description | Example |
+|-----------|------|-------------|---------|
+| `llmProvider` | string | LLM for script generation (`provider:model`) | `anthropic:claude-sonnet-4-20250514` |
+| `ttsProvider` | string | TTS engine for voiceover (`provider:model`) | `sarvam:bulbul-v3`, `openai:tts-1` |
+| `imageProvider` | string | Image generation model (`provider:model`) | `kie:flux-2` |
+| `imageStyle` | string | Visual style for scene images | `doodle`, `animated-cartoon`, `photorealistic` |
+| `voiceId` | string | Provider-specific voice identifier | `meera` |
+
+All fields are optional. Sensible defaults are used when omitted. The default `imageStyle` is `animated-cartoon`.
+
+### Image Style Reference
+
+| Style | Description |
+|-------|-------------|
+| `doodle` | Whiteboard-style hand-drawn sketches on paper texture |
+| `animated-cartoon` | Colorful illustrated cartoon characters and scenes (default) |
+| `photorealistic` | Realistic photo-quality images |
+
+### Image Descriptions
+
+You can pass `userImageDescriptions` alongside `userImageUrls` to help the AI use your uploaded images more effectively:
+
+```json
+{
+  "userImageUrls": ["https://example.com/logo.png", "https://example.com/product.jpg"],
+  "userImageDescriptions": [
+    { "url": "https://example.com/logo.png", "description": "Company logo", "isLogo": true },
+    { "url": "https://example.com/product.jpg", "description": "Product screenshot" }
+  ]
+}
+```
+
 ## Rate Limits
 
-API key requests are subject to rate limiting. Contact your admin for details.
+Rate limiting is enforced at **10 requests per minute per API key**. The following headers are included in every response:
+
+| Header | Description |
+|--------|-------------|
+| `X-RateLimit-Limit` | Maximum requests allowed per minute |
+| `X-RateLimit-Remaining` | Requests remaining in the current window |
+| `X-RateLimit-Reset` | Unix timestamp when the window resets |
+
+Exceeding the limit returns a `429 Too Many Requests` response.
 
 ## Errors
 

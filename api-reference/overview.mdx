@@ -11,13 +11,17 @@ https://nexi.thelisa.ai
 
 ## Authentication
 
-Most endpoints require authentication. See the [Authentication guide](/guides/authentication) for details.
+Most endpoints require authentication. Both methods work on **every** endpoint -- use whichever suits your use case. See the [Authentication guide](/guides/authentication) for full details.
 
-| Method | How | Used by |
-|--------|-----|---------|
-| JWT Cookie | Auto-set after login | All endpoints |
-| API Key | `Authorization: Bearer sk-xxx` header | All endpoints |
-| Admin | JWT cookie or API key with admin role | `/api/admin/*` endpoints |
+| Method | How | Best for |
+|--------|-----|----------|
+| JWT Cookie (`auth-token`) | Auto-set after `/api/auth/login` or `/api/auth/google` | Browser / Web UI |
+| API Key | `Authorization: Bearer sk-xxx` header | curl, Postman, scripts, server-to-server |
+| Admin | Either method, requires `admin` role | `/api/admin/*` endpoints |
+
+<Tip>
+  For **curl or programmatic access**, use `Authorization: Bearer sk-xxx`. No login step needed.
+</Tip>
 
 ## Endpoints at a glance
 

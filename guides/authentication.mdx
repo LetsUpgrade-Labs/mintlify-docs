@@ -5,11 +5,24 @@ description: "How to authenticate with the Nexi API"
 
 ## Overview
 
-The Nexi API supports two authentication methods depending on your use case.
+The Nexi API supports two authentication methods. **Both work on every endpoint** -- the server tries the cookie first, then falls back to the `Authorization` header.
+
+### Which should I use?
+
+| Use case | Method | How |
+|----------|--------|-----|
+| Browser / Web UI | Session Cookie | Auto-set after login, sent automatically by the browser |
+| curl / Postman / Scripts | API Key (Header) | `Authorization: Bearer sk-xxx` |
+| Server-to-server | API Key (Header) | `Authorization: Bearer sk-xxx` |
+| Mobile app | API Key (Header) | `Authorization: Bearer sk-xxx` |
+
+<Tip>
+  For **curl, Postman, or any programmatic use**, use the `Authorization: Bearer sk-xxx` header. It's simpler -- no login step needed, no cookie management. The cookie method is designed for browsers.
+</Tip>
 
 ## Method 1: Session Cookie (Browser / Interactive)
 
-For browser-based or interactive use, authenticate via the login endpoints. A JWT cookie is set automatically.
+For browser-based or interactive use, authenticate via the login endpoints. A signed JWT cookie named `auth-token` is set automatically (HttpOnly, 7-day expiry). The browser sends it with every subsequent request.
 
 ### Email & Password
 
@@ -81,3 +94,37 @@ curl -X POST https://nexi.thelisa.ai/api/auth/set-password \
 <Warning>
   Password must be at least 6 characters. Setting a password revokes all other active sessions.
 </Warning>
+
+## Technical Details
+
+### Authentication flow
+
+The server checks authentication in this order:
+
+1. **Cookie** -- looks for a cookie named `auth-token`, verifies it as a JWT signed with HS256
+2. **Header** -- if no valid cookie, reads `Authorization: Bearer <value>`:
+   - If the value starts with `sk-`, it's treated as an **API key** (hashed with SHA-256, looked up in the database)
+   - Otherwise, it's treated as a **JWT token** (verified the same way as the cookie)
+
+If neither method produces a valid user, the request is rejected with `401`.
+
+### Cookie details
+
+| Property | Value |
+|----------|-------|
+| Name | `auth-token` |
+| Type | Signed JWT (HS256) |
+| HttpOnly | Yes (not accessible via JavaScript) |
+| Secure | Yes (HTTPS only in production) |
+| SameSite | Lax |
+| Expiry | 7 days |
+
+### API Key details
+
+| Property | Value |
+|----------|-------|
+| Format | `sk-` followed by a random string |
+| Header | `Authorization: Bearer sk-xxx` |
+| Storage | SHA-256 hash stored in database (plain key is never stored) |
+| Expiry | Optional (set by admin at creation time) |
+| Revocation | Admins can revoke keys via `DELETE /api/admin/api-keys` |

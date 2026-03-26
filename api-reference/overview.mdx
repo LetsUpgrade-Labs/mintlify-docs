@@ -85,6 +85,22 @@ All fields are optional. Sensible defaults are used when omitted. The default TT
   If you provide a `voiceId`, it **must** be valid for the chosen `ttsProvider`. Invalid voice IDs are rejected with a `400` error before the pipeline starts.
 </Warning>
 
+### LLM Providers Reference
+
+The `llmProvider` parameter controls which language model generates the video script and scene structure.
+
+| Model ID | Label | Provider |
+|----------|-------|----------|
+| `anthropic:claude-sonnet-4-20250514` | Claude Sonnet 4 (default) | Anthropic |
+| `anthropic:claude-haiku-4-20250414` | Claude Haiku 4 | Anthropic |
+| `openai:gpt-4o` | GPT-4o | OpenAI |
+| `openai:gpt-4o-mini` | GPT-4o Mini | OpenAI |
+| `google:gemini-2.0-flash` | Gemini 2.0 Flash | Google |
+
+```json
+{ "llmProvider": "openai:gpt-4o" }
+```
+
 ### Voice Providers Reference
 
 #### OpenAI

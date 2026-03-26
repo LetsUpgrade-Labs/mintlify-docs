@@ -105,11 +105,15 @@ All fields are optional. Sensible defaults are used when omitted. The default TT
 
 #### ElevenLabs
 
-| Model ID | Label | Description |
-|----------|-------|-------------|
-| `elevenlabs:eleven_multilingual_v2` | Multilingual v2 | High-quality multilingual voices with 29 language support |
+| Model ID | Label | Latency | Languages |
+|----------|-------|---------|-----------|
+| `elevenlabs:eleven_v3` | v3 (Flagship) | Standard | 70+ |
+| `elevenlabs:eleven_multilingual_v2` | Multilingual v2 | Standard | 29 |
+| `elevenlabs:eleven_turbo_v2_5` | Turbo v2.5 | ~250ms | 32 |
+| `elevenlabs:eleven_flash_v2_5` | Flash v2.5 | ~75ms | 32 |
+| `elevenlabs:eleven_flash_v2` | Flash v2 | ~75ms | English only |
 
-**Voices:** Any ElevenLabs `voice_id` (premade or custom clones). Browse voices at [elevenlabs.io/voices](https://elevenlabs.io/voices).
+**Voices:** Any ElevenLabs `voice_id` (premade or custom clones). Browse voices at [elevenlabs.io/voices](https://elevenlabs.io/voices). Voice IDs are validated via the ElevenLabs API at request time.
 
 ```json
 { "ttsProvider": "elevenlabs:eleven_multilingual_v2", "voiceId": "21m00Tcm4TlvDq8ikWAM" }

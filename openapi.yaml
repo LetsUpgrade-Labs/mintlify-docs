@@ -350,6 +350,10 @@ paths:
                     - "openai:tts-1-hd"
                     - "openai:gpt-4o-mini-tts"
                     - "elevenlabs:eleven_multilingual_v2"
+                    - "elevenlabs:eleven_v3"
+                    - "elevenlabs:eleven_turbo_v2_5"
+                    - "elevenlabs:eleven_flash_v2_5"
+                    - "elevenlabs:eleven_flash_v2"
                     - "sarvam:bulbul-v3"
                   example: "openai:tts-1-hd"
                 imageProvider:

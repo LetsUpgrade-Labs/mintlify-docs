@@ -26,29 +26,52 @@ curl -X POST https://nexi.thelisa.ai/api/auth/login \
 ## Step 2: Generate a video
 
 <CodeGroup>
-```bash API Key
+```bash OpenAI TTS
 curl -X POST https://nexi.thelisa.ai/api/generate-video \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $NEXI_API_KEY" \
   -d '{
     "prompt": "Explain how solar panels convert sunlight into electricity",
     "skipEditing": true,
-    "llmProvider": "anthropic:claude-sonnet-4-20250514",
-    "ttsProvider": "sarvam:bulbul-v3",
-    "imageProvider": "kie:flux-2",
-    "imageStyle": "animated-cartoon",
-    "voiceId": "meera"
+    "ttsProvider": "openai:tts-1-hd",
+    "voiceId": "nova",
+    "imageStyle": "animated-cartoon"
   }'
 ```
 
-```bash Session Cookie
+```bash ElevenLabs
+curl -X POST https://nexi.thelisa.ai/api/generate-video \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $NEXI_API_KEY" \
+  -d '{
+    "prompt": "Explain how solar panels convert sunlight into electricity",
+    "skipEditing": true,
+    "ttsProvider": "elevenlabs:eleven_multilingual_v2",
+    "voiceId": "21m00Tcm4TlvDq8ikWAM",
+    "imageStyle": "photorealistic"
+  }'
+```
+
+```bash Sarvam (Indian accent)
+curl -X POST https://nexi.thelisa.ai/api/generate-video \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $NEXI_API_KEY" \
+  -d '{
+    "prompt": "Explain how solar panels convert sunlight into electricity",
+    "skipEditing": true,
+    "ttsProvider": "sarvam:bulbul-v3",
+    "voiceId": "meera",
+    "imageStyle": "doodle"
+  }'
+```
+
+```bash Defaults (no provider specified)
 curl -X POST https://nexi.thelisa.ai/api/generate-video \
   -H "Content-Type: application/json" \
   -b cookies.txt \
   -d '{
     "prompt": "Explain how solar panels convert sunlight into electricity",
-    "skipEditing": true,
-    "imageStyle": "photorealistic"
+    "skipEditing": true
   }'
 ```
 </CodeGroup>
@@ -63,7 +86,7 @@ curl -X POST https://nexi.thelisa.ai/api/generate-video \
 ```
 
 <Note>
-  All provider fields (`llmProvider`, `ttsProvider`, `imageProvider`, `imageStyle`, `voiceId`) are optional. Sensible defaults are used when omitted.
+  All provider fields (`llmProvider`, `ttsProvider`, `imageProvider`, `imageStyle`, `voiceId`) are optional. Sensible defaults are used when omitted. See the [API Reference](/api-reference/overview) for the full list of supported voices per provider.
 </Note>
 
 ## Step 3: Poll for status

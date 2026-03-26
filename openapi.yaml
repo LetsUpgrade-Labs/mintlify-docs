@@ -342,8 +342,16 @@ paths:
                   example: "anthropic:claude-sonnet-4-20250514"
                 ttsProvider:
                   type: string
-                  description: "TTS provider and model for voiceover synthesis (format: provider:model)"
-                  example: "sarvam:bulbul-v3"
+                  description: |
+                    TTS provider and model for voiceover synthesis (format: provider:model).
+                    Supported: openai:tts-1, openai:tts-1-hd, openai:gpt-4o-mini-tts, elevenlabs:eleven_multilingual_v2, sarvam:bulbul-v3
+                  enum:
+                    - "openai:tts-1"
+                    - "openai:tts-1-hd"
+                    - "openai:gpt-4o-mini-tts"
+                    - "elevenlabs:eleven_multilingual_v2"
+                    - "sarvam:bulbul-v3"
+                  example: "openai:tts-1-hd"
                 imageProvider:
                   type: string
                   description: "Image generation provider and model (format: provider:model)"
@@ -356,8 +364,13 @@ paths:
                   example: animated-cartoon
                 voiceId:
                   type: string
-                  description: Provider-specific voice identifier for TTS
-                  example: "meera"
+                  description: |
+                    Provider-specific voice identifier for TTS. Must be valid for the chosen ttsProvider.
+                    OpenAI tts-1/tts-1-hd: alloy, ash, coral, echo, fable, nova, onyx, sage, shimmer.
+                    OpenAI gpt-4o-mini-tts: above plus ballad, verse, marin, cedar.
+                    ElevenLabs: any ElevenLabs voice_id (premade or custom clone).
+                    Sarvam: speaker name (e.g. meera, simran, rahul, priya).
+                  example: "nova"
       responses:
         "202":
           description: Video generation triggered
@@ -382,13 +395,21 @@ paths:
               schema:
                 $ref: "#/components/schemas/RunResponse"
         "400":
-          description: Missing or invalid prompt
+          description: Bad request — missing prompt or invalid voice ID for the chosen TTS provider
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-              example:
-                error: "Missing or invalid 'prompt' field"
+              examples:
+                missingPrompt:
+                  summary: Missing prompt
+                  value:
+                    error: "Missing or invalid 'prompt' field"
+                invalidVoice:
+                  summary: Invalid voice ID
+                  value:
+                    error: 'Invalid voice "unknown" for openai:tts-1-hd. Valid voices: alloy, ash, coral, echo, fable, nova, onyx, sage, shimmer'
+                    step: validate_voice
         "401":
           description: Not authenticated
           content:

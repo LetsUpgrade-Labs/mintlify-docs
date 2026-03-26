@@ -74,12 +74,60 @@ The `/api/generate-video` endpoint accepts optional provider parameters to custo
 | Parameter | Type | Description | Example |
 |-----------|------|-------------|---------|
 | `llmProvider` | string | LLM for script generation (`provider:model`) | `anthropic:claude-sonnet-4-20250514` |
-| `ttsProvider` | string | TTS engine for voiceover (`provider:model`) | `sarvam:bulbul-v3`, `openai:tts-1` |
+| `ttsProvider` | string | TTS engine for voiceover (`provider:model`) | `openai:tts-1-hd` |
 | `imageProvider` | string | Image generation model (`provider:model`) | `kie:flux-2` |
 | `imageStyle` | string | Visual style for scene images | `doodle`, `animated-cartoon`, `photorealistic` |
-| `voiceId` | string | Provider-specific voice identifier | `meera` |
+| `voiceId` | string | Provider-specific voice identifier | `nova`, `meera`, or an ElevenLabs voice ID |
 
-All fields are optional. Sensible defaults are used when omitted. The default `imageStyle` is `animated-cartoon`.
+All fields are optional. Sensible defaults are used when omitted. The default TTS is `openai:tts-1` with voice `alloy`.
+
+<Warning>
+  If you provide a `voiceId`, it **must** be valid for the chosen `ttsProvider`. Invalid voice IDs are rejected with a `400` error before the pipeline starts.
+</Warning>
+
+### Voice Providers Reference
+
+#### OpenAI
+
+| Model ID | Label | Description |
+|----------|-------|-------------|
+| `openai:tts-1` | TTS-1 | Low-latency standard quality |
+| `openai:tts-1-hd` | TTS-1 HD | Higher quality audio |
+| `openai:gpt-4o-mini-tts` | GPT-4o Mini TTS | Newest model with accent/emotion control via instructions |
+
+**Voices for `tts-1` and `tts-1-hd`:** `alloy`, `ash`, `coral`, `echo`, `fable`, `nova`, `onyx`, `sage`, `shimmer`
+
+**Voices for `gpt-4o-mini-tts`:** All of the above plus `ballad`, `verse`, `marin`, `cedar`
+
+```json
+{ "ttsProvider": "openai:tts-1-hd", "voiceId": "nova" }
+```
+
+#### ElevenLabs
+
+| Model ID | Label | Description |
+|----------|-------|-------------|
+| `elevenlabs:eleven_multilingual_v2` | Multilingual v2 | High-quality multilingual voices with 29 language support |
+
+**Voices:** Any ElevenLabs `voice_id` (premade or custom clones). Browse voices at [elevenlabs.io/voices](https://elevenlabs.io/voices).
+
+```json
+{ "ttsProvider": "elevenlabs:eleven_multilingual_v2", "voiceId": "21m00Tcm4TlvDq8ikWAM" }
+```
+
+#### Sarvam
+
+| Model ID | Label | Description |
+|----------|-------|-------------|
+| `sarvam:bulbul-v3` | Bulbul v3 | Natural Indian-accented English and 11 Indian languages |
+
+**Male voices:** `shubh` (default), `aditya`, `rahul`, `rohan`, `amit`, `dev`, `ratan`, `varun`, `manan`, `sumit`, `kabir`, `aayan`, `ashutosh`, `advait`, `anand`, `tarun`, `sunny`, `mani`, `gokul`, `vijay`, `mohit`, `rehan`, `soham`
+
+**Female voices:** `ritu`, `priya`, `neha`, `pooja`, `simran`, `kavya`, `ishita`, `shreya`, `roopa`, `amelia`, `sophia`, `tanya`, `shruti`, `suhani`, `kavitha`, `rupali`, `meera`
+
+```json
+{ "ttsProvider": "sarvam:bulbul-v3", "voiceId": "meera" }
+```
 
 ### Image Style Reference
 
@@ -125,6 +173,26 @@ All error responses follow this format:
 }
 ```
 
+The `/api/generate-video` endpoint returns additional diagnostic fields on failure:
+
+```json
+{
+  "error": "Failed to start video generation",
+  "step": "trigger_task",
+  "detail": "TRIGGER_SECRET_KEY is not configured"
+}
+```
+
+For **async** pipeline failures (TTS errors, rendering errors, etc.), poll `/api/video-status` -- the `error` field contains the specific failure message:
+
+```json
+{
+  "status": "FAILED",
+  "videoId": "...",
+  "error": "openai TTS failed (model: openai:tts-1, voice: \"invalid\"): 400 Bad Request"
+}
+```
+
 Common HTTP status codes:
 
 | Code | Meaning |
@@ -132,8 +200,9 @@ Common HTTP status codes:
 | `200` | Success |
 | `201` | Created |
 | `202` | Accepted (async task started) |
-| `400` | Bad request (missing/invalid params) |
+| `400` | Bad request (missing/invalid params, invalid voice ID) |
 | `401` | Not authenticated |
 | `403` | Forbidden (wrong role or owner) |
 | `404` | Resource not found |
+| `429` | Rate limit exceeded |
 | `500` | Server error |

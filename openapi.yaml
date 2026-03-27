@@ -367,7 +367,7 @@ paths:
                 imageProvider:
                   type: string
                   description: "Image generation provider and model (format: provider:model)"
-                  example: "kie:flux-2"
+                  example: "kie:nano-banana-pro"
                 imageStyle:
                   type: string
                   description: Visual style for generated scene images

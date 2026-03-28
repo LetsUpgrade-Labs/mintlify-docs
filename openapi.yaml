@@ -340,13 +340,13 @@ paths:
                   type: string
                   description: |
                     LLM provider and model for script generation (format: provider:model).
-                    Supported: anthropic:claude-sonnet-4-20250514, anthropic:claude-haiku-4-20250414, openai:gpt-4o, openai:gpt-4o-mini, google:gemini-2.0-flash
+                    Supported: anthropic:claude-sonnet-4-20250514, anthropic:claude-haiku-4-20250414, openai:gpt-4o, openai:gpt-4o-mini, google:gemini-3.1-flash-lite-preview
                   enum:
                     - "anthropic:claude-sonnet-4-20250514"
                     - "anthropic:claude-haiku-4-20250414"
                     - "openai:gpt-4o"
                     - "openai:gpt-4o-mini"
-                    - "google:gemini-2.0-flash"
+                    - "google:gemini-3.1-flash-lite-preview"
                   example: "anthropic:claude-sonnet-4-20250514"
                 ttsProvider:
                   type: string
